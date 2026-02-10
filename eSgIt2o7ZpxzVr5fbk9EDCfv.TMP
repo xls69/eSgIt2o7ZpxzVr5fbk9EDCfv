@@ -256,8 +256,6 @@ function main()
     
     lua_thread.create(mainLoop)
 
-	sampRegisterChatCommand('bb', function() deleteChar(1) end)
-
     wait(-1)
 end
 
@@ -265,5 +263,6 @@ function onScriptTerminate(script, quitGame)
     memory.setfloat(0x8D6110, 0.75, true)
     memory.setfloat(memory.getuint32(0x6C0449 + 2), true, 0.0599, true)
 end
+
 
 

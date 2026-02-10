@@ -1,0 +1,269 @@
+local memory = require("memory")
+local v = require("vkeys")
+local sampev = require("samp.events")
+
+-- config --
+local aliases = {
+    ["/drop"] = "/baci",
+    ["/fix"] = "/fixveh",
+    ["/k"] = "/kupi",
+    ["/buy"] = "/kupi",
+    ["/ar"] = "/koristi drogu",
+    ["/gudra"] = "/koristi drogu",
+    ["/hp"] = "/koristi hranu",
+    ["/rana"] = "/koristi hranu",
+    ["/mask"] = "/marama",
+    ["/pickup"] = "/podigni",
+    ["/askq"] = "/pitaj",
+    ["/gpsoff"] = "/gps off",
+    ["/steal"] = "/ukradi",
+    ["/u"] = "/ukradi",
+    ["/masknick"] = "/vipmask",
+    ["/nickmask"] = "/vipmask",
+    ["/vport"] = "/vportvozilo",
+    ["/goes"] = "/toggoto",
+    ["/tag"] = "/togtag",
+    ["/turf"] = "/zauzmi"
+}
+
+local autokey = v.VK_LSHIFT
+local manualkey = v.VK_XBUTTON1
+local isSprintAuto = true
+
+local HUKKeyCombo = {v.VK_H, v.VK_U, v.VK_K}
+local FEKey = v.VK_J
+local JBKey = v.VK_X
+
+local NBPKeyCombo = {v.VK_N, v.VK_B}
+local NBPActive = false
+local NBPOffInWater = true
+local NBPOffInAFK = true
+
+local SPR = 25
+local ASChance = 10
+
+local SA_IP = "5.252.35.13"
+-- end of config --
+
+local SPR_calc = 0.75 * (SPR / 100)
+
+local bike = {[481]=true,[509]=true,[510]=true}
+local moto = {[448]=true,[461]=true,[462]=true,[463]=true,[468]=true,[471]=true,[521]=true,[522]=true,[523]=true,[581]=true,[586]=true}
+
+local ASAnimations = {
+    'DAM_armL_frmBK', 'DAM_armL_frmFT', 'DAM_armL_frmLT', 
+    'DAM_armR_frmBK', 'DAM_armR_frmFT', 'DAM_armR_frmRT', 
+    'DAM_LegL_frmBK', 'DAM_LegL_frmFT', 'DAM_LegL_frmLT', 
+    'DAM_LegR_frmBK', 'DAM_LegR_frmFT', 'DAM_LegR_frmRT', 
+    'DAM_stomach_frmBK', 'DAM_stomach_frmFT', 'DAM_stomach_frmLT', 
+    'DAM_stomach_frmRT', 'HIT_back', 'HIT_behind',
+    'HIT_front', 'HIT_GUN_BUTT', 'HIT_L',
+    'HIT_R'
+}
+
+local togglesCooldownUntil = 0
+local TOGGLE_COOLDOWN_MS = 1000
+local ASRolled = false
+local currentASAnim = nil
+local ASActive = false
+
+local function toggleSprintMode()
+    isSprintAuto = not isSprintAuto
+    addOneOffSound(0, 0, 0, isSprintAuto and 1054 or 1055)
+end
+
+local function toggleNBP()
+    NBPActive = not NBPActive
+    addOneOffSound(0, 0, 0, NBPActive and 1083 or 1084)
+end
+
+local function checkKeyCombo(combo)
+    for i = 1, #combo do
+        if not isKeyDown(combo[i]) then return false end
+    end
+    return true
+end
+
+local function isKeyCheckAvailable()
+    if isSampAvailable() then
+        return not sampIsCursorActive()
+    end
+    return false
+end
+
+local function isPlayerStunned()
+    for i = 1, #ASAnimations do
+        if isCharPlayingAnim(PLAYER_PED, ASAnimations[i]) then
+            return true, ASAnimations[i]
+        end
+    end
+    return false, nil
+end
+
+local function skillalbanija()
+    local success, ip, port = pcall(sampGetCurrentServerAddress)
+    if not success then
+        return false 
+    end
+    
+    return ip == SA_IP
+end
+
+local function SAskipanim()
+    if skillalbanija() then
+        setCharAnimSpeed(PLAYER_PED, "EAT_Burger", 999)
+        setCharAnimSpeed(PLAYER_PED, "EAT_Chicken", 999)
+        setCharAnimSpeed(PLAYER_PED, "EAT_Pizza", 999)
+    end
+end
+
+function sampev.onSetPlayerDrunk(drunkLevel)
+    return not skillalbanija()
+end
+
+function sampev.onSendCommand(command)
+    if isSampfuncsLoaded() and skillalbanija() then
+        local cmdLower = command:lower()
+        for alias, replacement in pairs(aliases) do
+            if cmdLower == alias:lower() then
+                command = replacement
+                break
+            end
+        end
+        return { command }
+    end
+end
+
+local function mainLoop()
+    while true do
+        wait(0)
+        if isSampfuncsLoaded() then
+        
+			local canCheckKeys = getGameTimer() >= togglesCooldownUntil and isKeyCheckAvailable()
+			if canCheckKeys then
+				if checkKeyCombo(HUKKeyCombo) then
+					toggleSprintMode()
+					togglesCooldownUntil = getGameTimer() + TOGGLE_COOLDOWN_MS
+				elseif checkKeyCombo(NBPKeyCombo) then
+					toggleNBP()
+					togglesCooldownUntil = getGameTimer() + TOGGLE_COOLDOWN_MS
+				end
+			end
+			
+			if isKeyCheckAvailable() then
+				if isCharInAnyCar(PLAYER_PED) and wasKeyPressed(FEKey) then
+					local vehicle = storeCarCharIsInNoSave(PLAYER_PED)
+					local x, y, z = getCarCoordinates(vehicle)
+					warpCharFromCarToCoord(PLAYER_PED, x, y, z + 0.5)
+				end
+				
+				if isCharOnAnyBike(PLAYER_PED) and isKeyDown(JBKey) then
+					memory.setfloat(memory.getuint32(0x6C0449 + 2, true), 0.1399, true)
+				else
+					memory.setfloat(memory.getuint32(0x6C0449 + 2, true), 0.0599, true)
+				end
+			end
+			
+			local autokeyDown = isKeyDown(autokey)
+			local manualkeyDown = isKeyDown(manualkey)
+			local manualkeyDownAndautokeyDown = manualkeyDown and autokeyDown
+			
+			setPlayerNeverGetsTired(PLAYER_HANDLE, isSprintAuto)
+			
+			if isCharOnFoot(PLAYER_PED) then
+				SAskipanim()
+				local sprintSpeed = 1.0
+				if (isSprintAuto and autokeyDown) or (not isSprintAuto and manualkeyDownAndautokeyDown) then
+					sprintSpeed = 1.25
+				end
+				
+				setCharAnimSpeed(PLAYER_PED, "sprint_civi", sprintSpeed)
+				setCharAnimSpeed(PLAYER_PED, "sprint_panic", sprintSpeed)
+			end
+				
+			if isCharInWater(PLAYER_PED) then
+				local swimSpeed = 1.0
+				if (isSprintAuto and autokeyDown) or (not isSprintAuto and manualkeyDownAndautokeyDown) then
+					swimSpeed = 1.45
+				end
+				
+				setCharAnimSpeed(PLAYER_PED, "Swim_Breast", swimSpeed)
+				setCharAnimSpeed(PLAYER_PED, "SWIM_crawl", swimSpeed)
+				setCharAnimSpeed(PLAYER_PED, "Swim_Dive_Under", swimSpeed)
+				setCharAnimSpeed(PLAYER_PED, "Swim_Under", swimSpeed)
+			end
+			
+
+			if manualkeyDown and isCharOnAnyBike(PLAYER_PED) then
+				local vehicle = storeCarCharIsInNoSave(PLAYER_PED)
+				local model = getCarModel(vehicle)
+						
+				if bike[model] then
+					setGameKeyState(16, 255)
+					wait(10)
+					setGameKeyState(16, 0)
+				elseif moto[model] then
+					setGameKeyState(1, -128)
+					wait(10)
+					setGameKeyState(1, 0)
+				end
+			end
+			
+			local isStunned, stunAnim = isPlayerStunned()
+				
+			if isStunned and not ASActive then
+				ASActive = true
+				currentASAnim = stunAnim
+				ASRolled = false
+						
+				local chance = math.random(1, 100)
+				if chance <= ASChance then
+					setCharAnimSpeed(PLAYER_PED, currentASAnim, 999)
+					ASRolled = true
+				end
+			elseif isStunned and ASActive and ASRolled then
+				setCharAnimSpeed(PLAYER_PED, currentASAnim, 999)
+			elseif not isStunned and ASActive then
+				ASActive = false
+				currentASAnim = nil
+				ASRolled = false
+			end
+			
+			if not NBPActive then
+				setCharCanBeKnockedOffBike(PLAYER_PED, false)
+			elseif isCharOnAnyBike(PLAYER_PED) then
+				local vehicle = storeCarCharIsInNoSave(PLAYER_PED)
+				local shouldDisable = (NBPOffInWater and isCarInWater(vehicle)) or
+									  (NBPOffInAFK and isGamePaused())
+				setCharCanBeKnockedOffBike(PLAYER_PED, not shouldDisable)
+			end
+			
+			if isCurrentCharWeapon(PLAYER_PED, 24) then
+				memory.setfloat(0x8D6110, SPR_calc, true)
+			else
+				memory.setfloat(0x8D6110, 0.75, true)
+			end
+		end
+    end
+end
+
+function main()
+    while not isSampAvailable() and not isSampfuncsLoaded() do
+        wait(100)
+    end
+    
+    sampRegisterChatCommand('bb', function() 
+        deleteChar(1) 
+    end)
+    
+    math.randomseed(os.time())
+    
+    lua_thread.create(mainLoop)
+    
+    wait(-1)
+end
+
+function onScriptTerminate(script, quitGame)
+    memory.setfloat(0x8D6110, 0.75, true)
+    memory.setfloat(memory.getuint32(0x6C0449 + 2), true, 0.0599, true)
+end

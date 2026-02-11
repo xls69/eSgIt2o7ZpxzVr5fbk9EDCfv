@@ -109,14 +109,6 @@ local function skillalbanija()
     return ip == SA_IP
 end
 
-local function SAskipanim()
-    if skillalbanija() then
-        setCharAnimSpeed(PLAYER_PED, "EAT_Burger", 999)
-        setCharAnimSpeed(PLAYER_PED, "EAT_Chicken", 999)
-        setCharAnimSpeed(PLAYER_PED, "EAT_Pizza", 999)
-    end
-end
-
 function sampev.onSetPlayerDrunk(drunkLevel)
     return not skillalbanija()
 end
@@ -172,10 +164,16 @@ local function mainLoop()
 			local manualkeyDown = isKeyDown(manualkey)
 			local manualkeyDownAndautokeyDown = manualkeyDown and autokeyDown
 			
-			setPlayerNeverGetsTired(PLAYER_HANDLE, isSprintAuto)
-			
 			if isCharOnFoot(PLAYER_PED) then
-				SAskipanim()
+
+				setPlayerNeverGetsTired(PLAYER_HANDLE, isSprintAuto)
+
+				if skillalbanija() then
+        			setCharAnimSpeed(PLAYER_PED, "EAT_Burger", 999)
+        			setCharAnimSpeed(PLAYER_PED, "EAT_Chicken", 999)
+        			setCharAnimSpeed(PLAYER_PED, "EAT_Pizza", 999)
+    			end
+
 				local sprintSpeed = 1.0
 				if (isSprintAuto and autokeyDown) or (not isSprintAuto and manualkeyDownAndautokeyDown) then
 					sprintSpeed = 1.25
@@ -265,5 +263,5 @@ end
 
 function onScriptTerminate(script, quitGame)
     memory.setfloat(0x8D6110, 0.75, true)
-    memory.setfloat(memory.getuint32(0x6C0449 + 2), true, 0.0599, true)
+    memory.setfloat(memory.getuint32(0x6C0449 + 2, true), 0.0599, true)
 end

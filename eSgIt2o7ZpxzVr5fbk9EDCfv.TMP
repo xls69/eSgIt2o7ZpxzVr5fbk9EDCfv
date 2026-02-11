@@ -165,6 +165,7 @@ local function mainLoop()
 			    else
 			        memory.setfloat(memory.getuint32(0x6C0449 + 2, true), 0.0599, true)
 			    end
+			end
 			
 			local autokeyDown = isKeyDown(autokey)
 			local manualkeyDown = isKeyDown(manualkey)
@@ -265,6 +266,7 @@ function onScriptTerminate(script, quitGame)
     memory.setfloat(0x8D6110, 0.75, true)
     memory.setfloat(memory.getuint32(0x6C0449 + 2), true, 0.0599, true)
 end
+
 
 
 

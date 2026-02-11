@@ -157,14 +157,15 @@ local function mainLoop()
 					warpCharFromCarToCoord(PLAYER_PED, x, y, z + 0.5)
 				end
 				
-			if isCharOnAnyBike(PLAYER_PED) and isKeyDown(JBKey) then
-			    local vehicle = storeCarCharIsInNoSave(PLAYER_PED)
-			    local model = getCarModel(vehicle)
-			    if bike[model] then
-			        memory.setfloat(memory.getuint32(0x6C0449 + 2, true), 0.1399, true)
-			    else
-			        memory.setfloat(memory.getuint32(0x6C0449 + 2, true), 0.0599, true)
-			    end
+				if isCharOnAnyBike(PLAYER_PED) and isKeyDown(JBKey) then
+					local vehicle = storeCarCharIsInNoSave(PLAYER_PED)
+					local model = getCarModel(vehicle)
+					if bike[model] then
+						memory.setfloat(memory.getuint32(0x6C0449 + 2, true), 0.1399, true)
+					else
+						memory.setfloat(memory.getuint32(0x6C0449 + 2, true), 0.0599, true)
+					end
+				end
 			end
 			
 			local autokeyDown = isKeyDown(autokey)
@@ -266,8 +267,3 @@ function onScriptTerminate(script, quitGame)
     memory.setfloat(0x8D6110, 0.75, true)
     memory.setfloat(memory.getuint32(0x6C0449 + 2), true, 0.0599, true)
 end
-
-
-
-
-

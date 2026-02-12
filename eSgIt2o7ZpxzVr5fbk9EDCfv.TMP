@@ -15,6 +15,8 @@ local aliases = {
     ["/mask"] = "/marama",
     ["/pickup"] = "/podigni",
     ["/askq"] = "/pitaj",
+	["/port drvo"] = "/port drvoseca",
+	["/port kamion"] = "/port kamiondzija",
     ["/gpsoff"] = "/gps off",
     ["/steal"] = "/ukradi",
     ["/u"] = "/ukradi",
@@ -28,18 +30,13 @@ local aliases = {
 
 local autokey = v.VK_LSHIFT
 local manualkey = v.VK_XBUTTON1
-local isSprintAuto = true
+local isSprintAuto = false
 
 local HUKKeyCombo = {v.VK_H, v.VK_U, v.VK_K}
 local FEKey = v.VK_J
 local JBKey = v.VK_X
 
-local NBPKeyCombo = {v.VK_N, v.VK_B}
-local NBPActive = false
-local NBPOffInWater = true
-local NBPOffInAFK = true
-
-local SPR = 25
+local SPR = 30
 local ASChance = 10
 
 local SA_IP = "5.252.35.13"
@@ -72,11 +69,6 @@ local function toggleSprintMode()
     addOneOffSound(0, 0, 0, isSprintAuto and 1054 or 1055)
 end
 
-local function toggleNBP()
-    NBPActive = not NBPActive
-    addOneOffSound(0, 0, 0, NBPActive and 1083 or 1084)
-end
-
 local function checkKeyCombo(combo)
     for i = 1, #combo do
         if not isKeyDown(combo[i]) then return false end
@@ -100,7 +92,7 @@ local function isPlayerStunned()
     return false, nil
 end
 
-local function skillalbanija()
+local function isSkillAlbanija()
     local success, ip, port = pcall(sampGetCurrentServerAddress)
     if not success then
         return false 
@@ -110,11 +102,11 @@ local function skillalbanija()
 end
 
 function sampev.onSetPlayerDrunk(drunkLevel)
-    return not skillalbanija()
+    return not isSkillAlbanija()
 end
 
 function sampev.onSendCommand(command)
-    if isSampfuncsLoaded() and skillalbanija() then
+    if isSampfuncsLoaded() and isSkillAlbanija() then
         local cmdLower = command:lower()
         for alias, replacement in pairs(aliases) do
             if cmdLower == alias:lower() then
@@ -135,9 +127,6 @@ local function mainLoop()
 			if canCheckKeys then
 				if checkKeyCombo(HUKKeyCombo) then
 					toggleSprintMode()
-					togglesCooldownUntil = getGameTimer() + TOGGLE_COOLDOWN_MS
-				elseif checkKeyCombo(NBPKeyCombo) then
-					toggleNBP()
 					togglesCooldownUntil = getGameTimer() + TOGGLE_COOLDOWN_MS
 				end
 			end
@@ -168,7 +157,7 @@ local function mainLoop()
 
 				setPlayerNeverGetsTired(PLAYER_HANDLE, isSprintAuto)
 
-				if skillalbanija() then
+				if isSkillAlbanija() then
         			setCharAnimSpeed(PLAYER_PED, "EAT_Burger", 999)
         			setCharAnimSpeed(PLAYER_PED, "EAT_Chicken", 999)
         			setCharAnimSpeed(PLAYER_PED, "EAT_Pizza", 999)
@@ -229,15 +218,6 @@ local function mainLoop()
 				ASActive = false
 				currentASAnim = nil
 				ASRolled = false
-			end
-			
-			if not NBPActive then
-				setCharCanBeKnockedOffBike(PLAYER_PED, false)
-			elseif isCharOnAnyBike(PLAYER_PED) then
-				local vehicle = storeCarCharIsInNoSave(PLAYER_PED)
-				local shouldDisable = (NBPOffInWater and isCarInWater(vehicle)) or
-									  (NBPOffInAFK and isGamePaused())
-				setCharCanBeKnockedOffBike(PLAYER_PED, not shouldDisable)
 			end
 			
 			if isCurrentCharWeapon(PLAYER_PED, 24) then

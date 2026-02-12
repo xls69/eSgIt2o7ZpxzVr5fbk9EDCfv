@@ -101,6 +101,15 @@ local function isSkillAlbanija()
     return ip == SA_IP
 end
 
+local function setNameTagDrawDistance(distance)
+    local settingsPtr = sampGetServerSettingsPtr()
+    if settingsPtr and settingsPtr ~= 0 then
+        memory.setfloat(settingsPtr + 0x27, distance, true)
+        return true
+    end
+    return false
+end
+
 function sampev.onSetPlayerDrunk(drunkLevel)
     return not isSkillAlbanija()
 end
@@ -158,6 +167,7 @@ local function mainLoop()
 				setPlayerNeverGetsTired(PLAYER_HANDLE, isSprintAuto)
 
 				if isSkillAlbanija() then
+					setNameTagDrawDistance(70.0)
         			setCharAnimSpeed(PLAYER_PED, "EAT_Burger", 999)
         			setCharAnimSpeed(PLAYER_PED, "EAT_Chicken", 999)
         			setCharAnimSpeed(PLAYER_PED, "EAT_Pizza", 999)

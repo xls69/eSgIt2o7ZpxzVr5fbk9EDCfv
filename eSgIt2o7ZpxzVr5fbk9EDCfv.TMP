@@ -165,6 +165,8 @@ local function mainLoop()
 			if isCharOnFoot(PLAYER_PED) then
 
 				setPlayerNeverGetsTired(PLAYER_HANDLE, isSprintAuto)
+				setCharAnimSpeed(PLAYER_PED, "GunMove_L", 1.2)
+				setCharAnimSpeed(PLAYER_PED, "GunMove_R", 1.2)
 
 				if isSkillAlbanija() then
 					setNameTagDrawDistance(70.0)

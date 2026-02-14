@@ -165,8 +165,8 @@ local function mainLoop()
 			if isCharOnFoot(PLAYER_PED) then
 
 				setPlayerNeverGetsTired(PLAYER_HANDLE, isSprintAuto)
-				setCharAnimSpeed(PLAYER_PED, "GunMove_L", 1.0)
-				setCharAnimSpeed(PLAYER_PED, "GunMove_R", 1.0)
+				setCharAnimSpeed(PLAYER_PED, "GunMove_L", 1.5)
+				setCharAnimSpeed(PLAYER_PED, "GunMove_R", 1.5)
 
 				if isSkillAlbanija() then
 					setNameTagDrawDistance(70.0)
@@ -257,4 +257,5 @@ function onScriptTerminate(script, quitGame)
     memory.setfloat(0x8D6110, 0.75, true)
     memory.setfloat(memory.getuint32(0x6C0449 + 2, true), 0.0599, true)
 end
+
 
